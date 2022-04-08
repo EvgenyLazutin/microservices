@@ -1,0 +1,68 @@
+version: '2'
+services:
+  service-registry:
+    container_name: service-registry
+    build:
+      context: service-registry
+      dockerfile: Dockerfile
+    image: service-registry:latest
+    ports:
+      - 8761:8761
+    networks:
+      - spring-cloud-network
+  product-service:
+    container_name: product-service
+    build:
+      context: product-service
+      dockerfile: Dockerfile
+    image: product-service:latest
+    ports:
+      - 8383:8383
+    depends_on:
+      - service-registry
+    networks:
+      - spring-cloud-network
+  inventory-service:
+    container_name: inventory-service
+    build:
+      context: inventory-service
+      dockerfile: Dockerfile
+    image: inventory-service:latest
+    ports:
+      - 8282:8282
+    depends_on:
+      - service-registry
+    networks:
+      - spring-cloud-network
+  catalog-service:
+    container_name: catalog-service
+    build:
+      context: catalog-service
+      dockerfile: Dockerfile
+    image: catalog-service:latest
+    ports:
+      - 8181:8181
+    depends_on:
+      - service-registry
+    networks:
+      - spring-cloud-network
+  zipkin:
+    image: openzipkin/zipkin
+    container_name: zipkin
+    # Environment settings are defined here https://github.com/openzipkin/zipkin/tree/1.19.0/zipkin-server#environment-variables
+    environment:
+      - STORAGE_TYPE=mem
+      # Uncomment to disable scribe
+      # - SCRIBE_ENABLED=false
+      # Uncomment to enable self-tracing
+      # - SELF_TRACING_ENABLED=true
+      # Uncomment to enable debug logging
+      # - JAVA_OPTS=-Dlogging.level.zipkin=DEBUG
+    ports:
+      # Port used for the Zipkin UI and HTTP Api
+      - 9411:9411
+    networks:
+      - spring-cloud-network
+networks:
+  spring-cloud-network:
+    driver: bridge
